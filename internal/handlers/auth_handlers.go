@@ -2,51 +2,35 @@ package controller
 
 import (
 	"net/http"
-	"time"
 
-	"github.com/Hdeee1/go-register-login-otp/internal/config"
-	"github.com/Hdeee1/go-register-login-otp/internal/models"
-	"github.com/Hdeee1/go-register-login-otp/pkg/utils"
+	"github.com/Hdeee1/go-register-login-otp/internal/services"
 	"github.com/gin-gonic/gin"
 )
+
+type AuthHandler struct {
+	otpService *services.OTPService
+}
+
+func NewAuthHandler(otpSvc *services.OTPService) *AuthHandler {
+	return &AuthHandler{otpService: otpSvc}
+}
 
 type OTPRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
-func RequestOTP(c *gin.Context) {
-	var input OTPRequest
+func (h *AuthHandler) RequestOTP(c *gin.Context) {
+	var req OTPRequest
 	
 	// Input JSON validation
-	if err := c.ShouldBindBodyWithJSON(&input); err != nil {
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Search user in database
-	var user models.User
-	if err := config.DB.Where("email = ?", input.Email).First(&user); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "The User with that email was not found"})
-		return
-	}
-
-	// Generate new OTP & exp time
-	otpCode := utils.GenerateOTP(6)
-	expirationTime := time.Now().Add(5 * time.Minute)
-
-	// Update Database (Save OTP & ExpAt)
-	user.OTPCode = otpCode
-	user.OTPExpiresAt = &expirationTime
-
-	if err := config.DB.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save OTP"})
-		return
-	}
-
-	// Send Email
-	err := utils.SendOTPEmail(user.Email, otpCode)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP"})
+	// Call service
+	if err := h.otpService.SendOTP(req.Email); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
