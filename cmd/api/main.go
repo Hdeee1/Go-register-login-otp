@@ -8,12 +8,10 @@ import (
 )
 
 func main() {
-	log.Println("🚀 Starting the application...")
-	
-	log.Println("Initializing database...")
+	config.LoadEnv()
 	config.InitDatabase()
 
 	r := gin.Default()
 
-	r.Run(":8080")
+	log.Fatal(r.Run(":8080"))
 }
