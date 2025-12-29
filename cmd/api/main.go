@@ -4,8 +4,9 @@ import (
 	"log"
 
 	"github.com/Hdeee1/go-register-login-otp/internal/config"
-	"github.com/Hdeee1/go-register-login-otp/internal/services"
 	"github.com/Hdeee1/go-register-login-otp/internal/handlers"
+	"github.com/Hdeee1/go-register-login-otp/internal/routes"
+	"github.com/Hdeee1/go-register-login-otp/internal/services"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,12 +14,18 @@ func main() {
 	config.LoadEnv()
 	config.InitDatabase()
 
+	// Init service
 	otpService := services.NewOTPService(config.DB)
-	authHandler := handlers.NewAuthHandler(otpService)
+	authService := services.NewAuthService(config.DB, otpService)
+
+	// Init handlers
+	authHandler := handlers.NewAuthHandler(authService, otpService)
 
 	r := gin.Default()
 
-	r.POST("api/auth/request-otp", authHandler.RequestOTP)
+	// Setup Routes
+	routes.SetupRoutes(r, authHandler)
 
+	log.Println("server running on :8080")
 	log.Fatal(r.Run(":8080"))
 }
