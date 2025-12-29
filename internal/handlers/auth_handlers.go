@@ -75,7 +75,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 // Login
 type LoginRequest struct {
 	Email		string `json:"email" binding:"required,email"`
-	Password 	string `json:"password", binding:"required,min=6"`
+	Password 	string `json:"password" binding:"required,min=6"`
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -106,3 +106,27 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		"user": response,
 	})
 }
+
+// otp
+type verifyOTPRequest struct {
+	Email	string `json:"email" binding:"required,email"`
+	OTP		string `json:"otp" binding:"required,len=6"`
+}
+
+func (h *AuthHandler) VerifyOTP(c *gin.Context) {
+	var req verifyOTPRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.otpService.VerifyOTP(req.Email, req.OTP); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Email successfully verified",
+	})
+} 
