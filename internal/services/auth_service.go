@@ -25,17 +25,17 @@ func NewAuthService(db *gorm.DB, otpSrv *OTPService,) *AuthService {
 func (s *AuthService) Register(input models.UserRegister) (*models.User, error) {
 	var existingUser models.User
 	// Check email exist
-	if err := s.DB.Where("email = ?", input.Email).First(&existingUser).Error; err != nil {
+	if err := s.DB.Where("email = ?", input.Email).First(&existingUser).Error; err == nil {
 		return nil, errors.New("email already register")
 	}
 
 	// Check username exist
-	if err := s.DB.Where("username = ?", input.Username).First(&existingUser).Error; err != nil {
+	if err := s.DB.Where("username = ?", input.Username).First(&existingUser).Error; err == nil {
 		return nil, errors.New("username already used")
 	}
 
 	// Check phone exist
-	if err := s.DB.Where("phone_number = ?", input.PhoneNumber).First(&existingUser).Error; err != nil {
+	if err := s.DB.Where("phone_number = ?", input.PhoneNumber).First(&existingUser).Error; err == nil {
 		return nil, errors.New("phone number already register")
 	}
 
