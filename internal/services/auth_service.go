@@ -64,7 +64,7 @@ func (s *AuthService) Register(input models.UserRegister) (*models.User, error) 
 
 	// Auto send otp
 	if err := s.otpService.SendOTP(input.Email); err != nil {
-		fmt.Printf("failed to send otp", err)
+		fmt.Printf("failed to send otp, err: %v", err)
 	}
 
 	return &user, nil
