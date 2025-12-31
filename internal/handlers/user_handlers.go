@@ -13,7 +13,7 @@ func NewUserHandler() *UserHandler {
 }
 
 func (h *UserHandler) GetProfile(c *gin.Context) {
-	userID, exist := c.Get("user_id)")
+	userID, exist := c.Get("user_id")
 	if !exist {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 
+	"github.com/Hdeee1/go-register-login-otp/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -22,4 +23,8 @@ func InitDatabase() {
 		panic("Failed to connect Database:" + err.Error())
 	}
 	DB = db
+
+	if err := DB.AutoMigrate(&models.User{}); err != nil {
+		panic("Failed to migrate database" + err.Error())
+	} 
 }

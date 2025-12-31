@@ -17,10 +17,10 @@ func main() {
 	// Init service
 	otpService := services.NewOTPService(config.DB)
 	authService := services.NewAuthService(config.DB, otpService)
-	userHandler := handlers.NewUserHandler()
-
+	
 	// Init handlers
 	authHandler := handlers.NewAuthHandler(authService, otpService)
+	userHandler := handlers.NewUserHandler()
 
 	r := gin.Default()
 
