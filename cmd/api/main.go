@@ -17,6 +17,7 @@ func main() {
 	// Init service
 	otpService := services.NewOTPService(config.DB)
 	authService := services.NewAuthService(config.DB, otpService)
+	userHandler := handlers.NewUserHandler()
 
 	// Init handlers
 	authHandler := handlers.NewAuthHandler(authService, otpService)
@@ -24,7 +25,7 @@ func main() {
 	r := gin.Default()
 
 	// Setup Routes
-	routes.SetupRoutes(r, authHandler)
+	routes.SetupRoutes(r, authHandler, userHandler)
 
 	log.Println("server running on :8080")
 	log.Fatal(r.Run(":8080"))
