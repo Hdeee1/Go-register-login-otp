@@ -3,9 +3,9 @@ package services
 import (
 	"errors"
 	"fmt"
-	
 
 	"github.com/Hdeee1/go-register-login-otp/internal/models"
+	"github.com/Hdeee1/go-register-login-otp/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -70,26 +70,31 @@ func (s *AuthService) Register(input models.UserRegister) (*models.User, error) 
 	return &user, nil
 }
 
-func (s *AuthService) Login(email, password string) (*models.User, error) {
+func (s *AuthService) Login(email, password string) (*models.User, string, error) {
 	// search user by email
 	var user models.User
 	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
-		return nil, errors.New("wrong email or password")
+		return nil, "", errors.New("wrong email or password")
 	}
 
 	// check password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return nil, errors.New("wrong email or password")
+		return nil, "", errors.New("wrong email or password")
 	}
 
 	// check email verified
 	if !user.EmailVerified {
-		return nil, errors.New("email has not been verified, please re-register")
+		return nil, "", errors.New("email has not been verified, please re-register")
 	}
 
 	if !user.IsActive {
-		return nil, errors.New("your account is nonactive")
+		return nil, "", errors.New("your account is nonactive")
 	}
 
-	return &user, nil
+	token, err := utils.GenerateToken(user.ID, user.Email)
+	if err != nil {
+		return nil, "", errors.New("failed to generate token")
+	}
+
+	return &user, token, nil
 }
