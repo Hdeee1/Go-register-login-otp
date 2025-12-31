@@ -74,3 +74,47 @@ func (s *OTPService) VerifyOTP(email, otpCode string) error {
 
 	return nil
 }
+
+func (s *OTPService) SendForgotOTP(email string) error {
+	var user models.User
+	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("user not found")
+		}
+		return err
+	}
+
+	otpCode := utils.GenerateOTP(6)
+	expAt := time.Now().Add(5 * time.Minute)
+
+	user.ResetToken = otpCode
+	user.ResetTokenExpiresAt = &expAt
+
+	if err := s.DB.Save(&user).Error; err != nil {
+		return errors.New("failed to save reset token")
+	}
+
+	if err := utils.SendOTPEmail(user.Email, otpCode); err != nil {
+		return errors.New("failed to send email")
+	}
+
+	return nil
+}
+
+func (s *OTPService) ValidateResetOTP(email, otpCode string) error {
+	var user models.User
+
+	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		return errors.New("user not found")
+	}
+
+	if user.ResetTokenExpiresAt == nil || time.Now().After(*user.ResetTokenExpiresAt) {
+		return errors.New("OTP for reset password expired")
+	}
+
+	if user.ResetToken != otpCode {
+		return errors.New("invalid OTP code")
+	}
+
+	return nil
+}
